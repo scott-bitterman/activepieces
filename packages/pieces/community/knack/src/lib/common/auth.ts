@@ -17,7 +17,7 @@ export const auth = PieceAuth.CustomAuth({
   // Optional Validation
   validate: async ({auth}) => {
     console.log('~~~~auth', auth) // props defined above are available here
-      if (auth){
+      if (auth) {
           return {
               valid: true,
           }

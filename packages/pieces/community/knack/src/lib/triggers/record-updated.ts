@@ -10,6 +10,7 @@ import {
   HttpMethod,
 } from '@activepieces/pieces-common';
 import { auth } from "../common/auth";
+import dayjs from 'dayjs';
 
 type AuthProps = {
   apiKey: string;
@@ -21,40 +22,69 @@ type KnackResponse = {
   records: any;
 };
 
+interface KnackFilter {
+  field: string;
+  operator: string;
+  value: number;
+}
+
+
 /*==============================
   Polling Trigger
   ==============================*/
 const polling: Polling<AuthProps, {}> = {
-  strategy: DedupeStrategy.LAST_ITEM,
-  items: async (context: any) => {
-    console.log('~~~polling context', JSON.stringify(context, null, 2));
-    const KNACK_URL = `${process.env['KNACK_URL']}/v1/objects/object_1/records?rows_per_page=10`;
+  strategy: DedupeStrategy.TIMEBASED,
+  items: async ({ auth, propsValue, lastFetchEpochMS }) => {
+    console.log('~~~polling context', JSON.stringify({ auth, propsValue, lastFetchEpochMS }, null, 2));
+    let url = `${process.env['KNACK_URL']}/v1/objects/object_1/records?rows_per_page=10`;
+
+    if (lastFetchEpochMS) {
+      const filters = [
+        {
+          field:'updated',
+          operator:'is after',
+          value: new Date(lastFetchEpochMS).toISOString(),
+        },
+      ];
+      console.log('~~~filters', JSON.stringify(filters, null, 2));
+      url = url + `&filters=${encodeURIComponent(JSON.stringify(filters))}`;
+    }
+
+    console.log({ url })
 
 		const response = await httpClient.sendRequest<KnackResponse>({
 			method: HttpMethod.GET,
-			url: KNACK_URL,
+			url,
 			headers: {
 				// Local
-				'X-Knack-Application-Id': context.auth.applicationId,
-				'X-Knack-REST-API-Key': context.auth.apiKey,
+				'X-Knack-Application-Id': auth.applicationId,
+				'X-Knack-REST-API-Key': auth.apiKey,
 			},
 		});
 
     console.log('~~~response.body.records', JSON.stringify(response.body.records, null, 2));
 
-    // This will return any new records
-    return response.body.records.map((record: any) => ({
-        id: record.id,
-        data: record,
+    
+    const now = new Date().toISOString();
+    console.log('~~~now', now);
+
+    // This will return any updated records
+    const timeMapResponse = response.body.records.map((record: any) => ({
+      // epochMilliSeconds: new Date(lastFetchEpochMS + 1).toISOString(),
+      epochMilliSeconds: dayjs(now).valueOf(),
+      // epochMilliSeconds: lastFetchEpochMS + 1000,
+      data: record,
     }));
+    console.log('~~~timeMapResponse', JSON.stringify(timeMapResponse, null, 2));
+    return timeMapResponse;
   }
 }
 
-export const triggerSomething = createTrigger({
+export const recordUpdated = createTrigger({
   auth,
-  name: 'knack-trigger', // Unique name across the piece.
-  displayName: 'Record Insert', // Display name on the interface.
-  description: 'Triggers when a record is inserted into a Knack table', // Description for the action
+  name: 'knack-trigger-record-update', // Unique name across the piece.
+  displayName: 'Record Updated', // Display name on the interface.
+  description: 'Triggers when a record is updated in a Knack table', // Description for the action
   type: TriggerStrategy.POLLING,
 
   props: {}, // Required properties from the user.
@@ -69,6 +99,8 @@ export const triggerSomething = createTrigger({
       store: context.store,
       propsValue: context.propsValue,
     });
+
+
   },
 
   // Run when the user disable the flow or
@@ -104,7 +136,21 @@ export const triggerSomething = createTrigger({
   },
 
   sampleData: {
-    _id: '5f5e3e3e3e3e3e3e3e3e3e3e',
-    value: 'hello world',
+    "id": "65baacf63989f0001dcfdee7",
+    "field_1": "8",
+    "field_1_raw": "8",
+    "field_2": "01/31/2024",
+    "field_2_raw": {
+      "date": "01/31/2024",
+      "date_formatted": "01/31/2024",
+      "hours": "12",
+      "minutes": "00",
+      "am_pm": "AM",
+      "unix_timestamp": 1706659200000,
+      "iso_timestamp": "2024-01-31T00:00:00.000Z",
+      "timestamp": "01/31/2024 12:00 am",
+      "time": 720
+    }
   }
+
 })
