@@ -50,7 +50,7 @@ const polling: Polling<AuthProps, {}> = {
   }
 }
 
-export const triggerSomething = createTrigger({
+export const recordInserted = createTrigger({
   auth,
   name: 'knack-trigger', // Unique name across the piece.
   displayName: 'Record Insert', // Display name on the interface.
