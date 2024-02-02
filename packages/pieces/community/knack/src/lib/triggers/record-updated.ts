@@ -64,16 +64,14 @@ const polling: Polling<AuthProps, {}> = {
 
     console.log('~~~response.body.records', JSON.stringify(response.body.records, null, 2));
 
-    
+
     const now = new Date().toISOString();
     console.log('~~~now', now);
 
     // This will return any updated records
     const timeMapResponse = response.body.records.map((record: any) => ({
-      // epochMilliSeconds: new Date(lastFetchEpochMS + 1).toISOString(),
       epochMilliSeconds: dayjs(now).valueOf(),
-      // epochMilliSeconds: lastFetchEpochMS + 1000,
-      data: record,
+      data: JSON.stringify(record, null, 2),
     }));
     console.log('~~~timeMapResponse', JSON.stringify(timeMapResponse, null, 2));
     return timeMapResponse;
@@ -106,8 +104,6 @@ export const recordUpdated = createTrigger({
   // Run when the user disable the flow or
   // the old flow is deleted after new one is published.
   onDisable: async (context) => { 
-    console.log('~~~~~~~disabled');
-    console.log('context disabled!', JSON.stringify(context, null, 2));
     await pollingHelper.onDisable(polling, {
       auth: context.auth,
       store: context.store,

@@ -45,7 +45,7 @@ const polling: Polling<AuthProps, {}> = {
     // This will return any new records
     return response.body.records.map((record: any) => ({
         id: record.id,
-        data: record,
+        data: JSON.stringify(record, null, 2),
     }));
   }
 }
@@ -74,8 +74,8 @@ export const recordInserted = createTrigger({
   // Run when the user disable the flow or
   // the old flow is deleted after new one is published.
   onDisable: async (context) => { 
-    console.log('~~~~~~~disabled');
-    console.log('context disabled!', JSON.stringify(context, null, 2));
+    // console.log('~~~~~~~disabled');
+    // console.log('context disabled!', JSON.stringify(context, null, 2));
     await pollingHelper.onDisable(polling, {
       auth: context.auth,
       store: context.store,

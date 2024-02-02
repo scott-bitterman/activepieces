@@ -24,7 +24,7 @@ export const auth = PieceAuth.CustomAuth({
       }
       return {
           valid: false,
-          error: 'Invalid Api Key'
+          error: 'Invalid Api Key',
       }
   },
   required: true
