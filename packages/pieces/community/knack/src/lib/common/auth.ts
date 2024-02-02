@@ -12,7 +12,7 @@ export const auth = PieceAuth.CustomAuth({
           displayName: 'API Key',
           description: 'You can find your API Key directly underneath the Application ID from the previous step.',
           required: true
-      })
+      }),
   },
   // Optional Validation
   validate: async ({auth}) => {
