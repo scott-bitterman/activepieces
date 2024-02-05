@@ -2,11 +2,10 @@ import { TriggerStrategy, createTrigger } from '@activepieces/pieces-framework';
 import {
   HttpRequest,
   HttpMethod,
-  AuthenticationType,
   httpClient,
 } from '@activepieces/pieces-common';
 import { auth } from "../common/auth";
-import { KnackWebhookInformation } from '../common';
+import { knackTables, KnackWebhookInformation } from '../common';
 
 const triggerNameInStore = 'knack_record_insert_trigger';
 
@@ -16,7 +15,7 @@ export const recordInsertWebHook = createTrigger({
   displayName: 'Record Insert - Webhook',
   description: 'Triggers when a record is inserted into a Knack table',
   props: {
-    // scope: calendlyCommon.scope,
+    table: knackTables, 
   },
   type: TriggerStrategy.WEBHOOK,
 

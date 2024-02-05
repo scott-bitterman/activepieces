@@ -2,7 +2,6 @@ import { TriggerStrategy, createTrigger } from '@activepieces/pieces-framework';
 import {
   HttpRequest,
   HttpMethod,
-  AuthenticationType,
   httpClient,
 } from '@activepieces/pieces-common';
 import { auth } from "../common/auth";

@@ -1,5 +1,5 @@
 import { PieceAuth, Property } from '@activepieces/pieces-framework';
-
+  
 export const auth = PieceAuth.CustomAuth({
   description: 'Enter custom authentication details',
   props: {
