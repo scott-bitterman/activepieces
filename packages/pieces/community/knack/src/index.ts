@@ -1,10 +1,15 @@
 import { createPiece, PieceAuth, Property } from "@activepieces/pieces-framework";
 import { doSomething } from "./lib/actions/do-something";
-import { recordInserted } from "./lib/triggers/record-inserted";
-import { recordDeleteWebHook } from "./lib/triggers/record-delete-webhook";
-import { recordInsertWebHook } from "./lib/triggers/record-insert-webhook";
-import { recordUpdateWebHook } from "./lib/triggers/record-update-webhook";
-import { recordUpdated } from "./lib/triggers/record-updated";
+// Polling examples
+// import { recordInserted } from "./lib/triggers/polling-record-inserted";
+// import { recordUpdated } from "./lib/triggers/polling-record-updated";
+import { webhookRecordCreate } from "./lib/triggers/webhook-record-create";
+import { webhookRecordDelete } from "./lib/triggers/webhook-record-delete";
+import { webhookRecordUpdate } from "./lib/triggers/webhook-record-update";
+
+// import { recordInsertWebHook } from './lib/triggers/OLDwebhook-record-create'
+// import { recordDeleteWebHook } from "./lib/triggers/OLDwebhook-record-delete";
+// import { recordUpdateWebHook } from "./lib/triggers/OLDwebhook-record-update";
 import { auth } from "./lib/common/auth";
     
 export const knack = createPiece({
@@ -17,11 +22,15 @@ export const knack = createPiece({
     doSomething,
   ],
   triggers: [
-    recordDeleteWebHook, 
-    recordInserted, 
-    recordInsertWebHook, 
-    recordUpdateWebHook, 
-    recordUpdated,
+    // Polling examples
+    // recordInserted, 
+    // recordUpdated, 
+    webhookRecordCreate,
+    webhookRecordDelete,
+    webhookRecordUpdate, 
+    // recordInsertWebHook,
+    // recordDeleteWebHook, 
+    // recordUpdateWebHook, 
   ],
 });
     
