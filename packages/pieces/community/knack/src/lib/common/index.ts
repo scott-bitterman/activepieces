@@ -1,5 +1,9 @@
 import { Property } from '@activepieces/pieces-framework';
-import { TriggerStrategy, createTrigger } from '@activepieces/pieces-framework';
+import { 
+  createAction,
+  createTrigger, 
+  TriggerStrategy 
+} from '@activepieces/pieces-framework';
 import {
   HttpRequest,
   HttpMethod,
@@ -16,15 +20,19 @@ export type KnackAuth = {
   apiKey: string;
 }
 
-export type KnackTriggerTypes = 'create' | 'update' | 'delete';
+export type KnackOperationTypes = 'create' | 'update' | 'delete';
+
+function capitalizeFirstLetter(string: string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
 /**
  * This Property definition is used to populate the dropdown used
- * to select the Knack table to watch for changes.
+ * to select the Knack table.
  */
 export const knackTables = Property.Dropdown({
-  displayName: 'Tables',
-  description: 'Pick a table to watch for changes',
+  displayName: 'Table',
+  description: 'Pick a Knack table',
   required: true,
   refreshers: [],
 
@@ -65,7 +73,7 @@ export const knackTables = Property.Dropdown({
 /**
  * Dynamically creates a Knack trigger based on the action type.
  */
-export function createTriggerKnack(type: KnackTriggerTypes) {
+export function createTriggerKnack(type: KnackOperationTypes) {
   const triggerNameInStore = `knack_record_trigger_${type}`;
   const typePastTense = `${type}d`;
 
@@ -90,6 +98,7 @@ export function createTriggerKnack(type: KnackTriggerTypes) {
         url: `${process.env['KNACK_URL']}/zapier/hooks?key=${context.propsValue.table}`,
         body: {
           event: `record_${typePastTense}`,
+          // TODO: Make this more dynamic. This will only work for local development.
           target_url: context.webhookUrl.replace('localhost', 'host.docker.internal'),
         },
         headers: {
@@ -106,7 +115,6 @@ export function createTriggerKnack(type: KnackTriggerTypes) {
       await context.store?.put(triggerNameInStore, {
         webhookId: body.id,
       });
-      console.log('~~webhook Knack webhook register url: ', `${process.env['KNACK_URL']}/zapier/hooks?key=object_1`);
       console.log('~~webhook enabled request.body', JSON.stringify(body, null, 2));
     },
 
@@ -153,4 +161,45 @@ export function createTriggerKnack(type: KnackTriggerTypes) {
       field_2: 'value_2',
     },
   });
+}
+
+export const typeToHttpMethodMap: Record<KnackOperationTypes, HttpMethod> = {
+  create: HttpMethod.POST,
+  update: HttpMethod.PUT,
+  delete: HttpMethod.DELETE,
+};
+
+/**
+ * Dynamically creates a Knack action based on the action type.
+ */
+export function createActionKnack(type: KnackOperationTypes) {
+
+  return createAction({
+    auth,
+    name: `action-record-${type}`,
+    displayName: `Record ${type}`,
+    description: `${capitalizeFirstLetter(type)}s a record in Knack`,
+    props: {
+      table: knackTables, 
+    },
+    async run(context) {
+      console.log('~~~context: ', JSON.stringify(context, null, 2));
+
+      const response = await httpClient.sendRequest<string[]>({
+        method: typeToHttpMethodMap[type],
+        url: `${process.env['KNACK_URL']}/v1/objects/${context.propsValue.table}/records`,
+        headers: {
+          'X-Knack-Application-Id': context.auth.applicationId,
+          'X-Knack-REST-API-Key': context.auth.apiKey,
+        },
+      });
+
+      return response;
+    },
+    // async test() {
+
+    // },
+
+  });
+
 }
