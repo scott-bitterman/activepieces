@@ -181,13 +181,24 @@ export function createActionKnack(type: KnackOperationTypes) {
     description: `${capitalizeFirstLetter(type)}s a record in Knack`,
     props: {
       table: knackTables, 
+      values: Property.LongText({
+        displayName: 'Values',
+        description: 'Use values to send to Knack',
+        required: false, 
+      }),
     },
     async run(context) {
       console.log('~~~context: ', JSON.stringify(context, null, 2));
+      let body;
+      if (context.propsValue.values) {
+        // TODO: This is a temporary fix. We need to figure out how to handle this better.
+        body = JSON.parse(JSON.stringify(context.propsValue.values));
+      }
 
       const response = await httpClient.sendRequest<string[]>({
         method: typeToHttpMethodMap[type],
         url: `${process.env['KNACK_URL']}/v1/objects/${context.propsValue.table}/records`,
+        body,
         headers: {
           'X-Knack-Application-Id': context.auth.applicationId,
           'X-Knack-REST-API-Key': context.auth.apiKey,
@@ -196,10 +207,7 @@ export function createActionKnack(type: KnackOperationTypes) {
 
       return response;
     },
-    // async test() {
-
-    // },
-
+    // async test() {}
   });
 
 }
