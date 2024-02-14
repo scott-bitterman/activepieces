@@ -152,7 +152,9 @@ export function createTriggerKnack(type: KnackOperationTypes) {
     // a separate flow run.
     async run(context) {
       console.log('~~~webhook run context in trigger: ', JSON.stringify(context, null, 2));
-      return [JSON.stringify(context.payload.body, null, 2)];
+      // const r = JSON.stringify(context.payload.body, null, 2);
+      return [context.payload.body];
+      // return [JSON.stringify(context.payload.body, null, 2)];
     },
 
     sampleData: {
@@ -195,6 +197,20 @@ export function createActionKnack(type: KnackOperationTypes) {
         body = JSON.parse(JSON.stringify(context.propsValue.values));
       }
 
+      // TODO: if the method is create, then need to check an idea to see if the record exists
+      // If record already exists, then do not recreate it!
+      // if (type === 'create') {
+      //   const getResponse = await httpClient.sendRequest<string[]>({
+      //     method: HttpMethod.GET,
+      //     url: `${process.env['KNACK_URL']}/v1/objects/${context.propsValue.table}/records`,
+      //     body,
+      //     headers: {
+      //       'X-Knack-Application-Id': context.auth.applicationId,
+      //       'X-Knack-REST-API-Key': context.auth.apiKey,
+      //     },
+      //   });  
+      // }
+
       const response = await httpClient.sendRequest<string[]>({
         method: typeToHttpMethodMap[type],
         url: `${process.env['KNACK_URL']}/v1/objects/${context.propsValue.table}/records`,
@@ -205,7 +221,7 @@ export function createActionKnack(type: KnackOperationTypes) {
         },
       });
 
-      return response;
+      return response.body;
     },
     // async test() {}
   });
